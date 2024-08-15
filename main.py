@@ -1,5 +1,4 @@
 import logging
-import shutil
 import subprocess
 from enum import Enum
 from os import path
@@ -39,17 +38,7 @@ class FuzzyFinderExtension(Extension):
     def __init__(self) -> None:
         super().__init__()
         self.subscribe(KeywordQueryEvent, KeywordQueryEventListener())
-
-    @staticmethod
-    def _assign_bin_name(bin_names: BinNames, bin_cmd: str, testing_cmd: str) -> BinNames:
-        try:
-            if shutil.which(testing_cmd):
-                bin_names[bin_cmd] = testing_cmd
-        except subprocess.CalledProcessError:
-            pass
-
-        return bin_names
-
+        
     @staticmethod
     def check_preferences(preferences: ExtensionPreferences) -> List[str]:
         logger.debug("Checking user preferences are valid")
@@ -114,19 +103,8 @@ class FuzzyFinderExtension(Extension):
     def get_binaries(self) -> Tuple[BinNames, List[str]]:
         logger.debug("Checking and getting binaries for dependencies")
         bin_names: BinNames = {}
-        bin_names = FuzzyFinderExtension._assign_bin_name(bin_names, "fzf_bin", "fzf")
-        bin_names = FuzzyFinderExtension._assign_bin_name(bin_names, "fd_bin", "fd")
-        if bin_names.get("fd_bin") is None:
-            bin_names = FuzzyFinderExtension._assign_bin_name(bin_names, "fd_bin", "fdfind")
-
-        errors = []
-        if bin_names.get("fzf_bin") is None:
-            errors.append("Missing dependency fzf. Please install fzf.")
-        if bin_names.get("fd_bin") is None:
-            errors.append("Missing dependency fd. Please install fd.")
-
-        if not errors:
-            logger.debug("Using binaries %s", bin_names)
+        bin_names["fzf_bin"] = "toolbox run -c devel-40 fzf"
+        bin_names["fd_bin"] = "toolbox run -c devel-40 fd"
 
         return bin_names, errors
 
